@@ -41,62 +41,47 @@ export PYTHONPATH=pose_extractor/build/:$PYTHONPATH
 ```
 
 ## Pre-trained model <a name="pre-trained-model"/>
-
-Pre-trained model is available at [Google Drive](https://drive.google.com/file/d/1niBUbUecPhKt3GyeDNukobL4OQ3jqssH/view?usp=sharing).
+Already downloaded at `human-pose-estimation-3d.pth`.
+~~Pre-trained model is available at [Google Drive](https://drive.google.com/file/d/1niBUbUecPhKt3GyeDNukobL4OQ3jqssH/view?usp=sharing).~~
 
 ## Running
 
+### Demo Running
+To run the demo_img script, just simply run:
+```
+python demo_img.py
+```
+
+Detailed about main function `inference_single_image()`
+```python
+def inference_single_image(
+    images:Union[str, List[str], np.ndarray],
+    model:str, 
+    device:str='GPU', 
+    height_size:int=256, 
+    extrinsics_path:str=None, 
+    fx:np.float32=-1, 
+    use_tensorrt:bool=False,
+    stride:int=8,
+    out_dir:str=None,
+):  
+    """
+    Args:
+        images (Union[str, List[str]]): input image(s)
+        model (str): Required. Path to checkpoint with a trained model
+        device (str, optional): Defaults to 'GPU'.
+        height_size (int, optional): Network input layer height size.. Defaults to 256.
+        extrinsics_path (str, optional): Path to file with camera extrinsics. Defaults to None.
+        fx (np.float32, optional): Camera focal length. Defaults to -1.
+        use_tensorrt (bool, optional): Optional. Run network with OpenVINO as inference engine. Defaults to False.
+        stride (int, optional): Defaults to 8.
+        out_dir (str, optional): Optional. Path to output directory. Defaults to None.
+    """
+```
+
+### Original Demo Running [skip this]
 To run the demo, pass path to the pre-trained checkpoint and camera id (or path to video file):
 ```
 python demo.py --model human-pose-estimation-3d.pth --video 0
 ```
 > Camera can capture scene under different view angles, so for correct scene visualization, please pass camera extrinsics and focal length with `--extrinsics` and `--fx` options correspondingly (extrinsics sample format can be found in data folder). In case no camera parameters provided, demo will use the default ones.
-
-## Inference with OpenVINO <a name="inference-openvino"/>
-
-To run with OpenVINO, it is necessary to convert checkpoint to OpenVINO format:
-1. Set OpenVINO environment variables:
-    ```
-	source <OpenVINO_INSTALL_DIR>/bin/setupvars.sh
-	```
-2. Convert checkpoint to ONNX:
-    ```
-	python scripts/convert_to_onnx.py --checkpoint-path human-pose-estimation-3d.pth
-	```
-3. Convert to OpenVINO format:
-    ```
-	python <OpenVINO_INSTALL_DIR>/deployment_tools/model_optimizer/mo.py --input_model human-pose-estimation-3d.onnx --input=data --mean_values=data[128.0,128.0,128.0] --scale_values=data[255.0,255.0,255.0] --output=features,heatmaps,pafs
-	```
-
-To run the demo with OpenVINO inference, pass `--use-openvino` option and specify device to infer on:
-```
-python demo.py --model human-pose-estimation-3d.xml --device CPU --use-openvino --video 0
-```
-
-## Inference with TensorRT <a name="inference-tensorrt"/>
-
-To run with TensorRT, it is necessary to install it properly. Please, follow the [official guide](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html), these steps work for me:
-1. [Install](https://developer.nvidia.com/cuda-downloads) CUDA 11.1.
-2. [Install](https://developer.nvidia.com/cudnn) cuDNN 8 (runtime library, then developer).
-3. Install `nvidia-tensorrt`:
-    ```
-    python -m pip install nvidia-pyindex
-    pip install nvidia-tensorrt==7.2.1.6
-    ```
-4. [Install](https://github.com/NVIDIA-AI-IOT/torch2trt) `torch2trt`.
-
-Convert checkpoint to TensorRT format:
-```
-python scripts/convert_to_trt.py --checkpoint-path human-pose-estimation-3d.pth
-```
-> TensorRT does not support dynamic network input size reshape.
-  Make sure you have set proper network input height, width with `--height` and `--width` options during conversion (if not, there will be no detections).
-  Default values work for a usual video with 16:9 aspect ratio (1280x720, 1920x1080).
-  You can check the network input size with `print(scaled_img.shape)` in the demo.py
-
-To run the demo with TensorRT inference, pass `--use-tensorrt` option:
-```
-python demo.py --model human-pose-estimation-3d-trt.pth --use-tensorrt --video 0
-```
-
-I have observed ~10x network inference speedup on RTX 2060 (in comparison with default PyTorch 1.6.0+cu101 inference).
