@@ -13,6 +13,7 @@ if(NUMPY_NOT_FOUND)
     message(FATAL_ERROR "NumPy headers not found")
 endif()
 
+set(OpenCV_DIR "/comp_robot/caohe/code/build")
 find_package(OpenCV 4 REQUIRED)
 
 set(CMAKE_CXX_STANDARD 11)

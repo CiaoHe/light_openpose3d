@@ -1,8 +1,9 @@
 import cv2
+from typing import List
 
 
 class ImageReader:
-    def __init__(self, file_names):
+    def __init__(self, file_names:List[str]):
         self.file_names = file_names
         self.max_idx = len(file_names)
 

@@ -1,3 +1,4 @@
 *.pyc
 __pycache__
 .idea/
+pose_extractor/build/
